@@ -47,6 +47,7 @@ namespace OAuth2Demo.Controllers
                 {
                     var _readToEnd = _sr.ReadToEnd();
                     var _res = SimpleJson.DeserializeObject<TokenInfo>(_readToEnd);
+                    _res.life_time = DateTime.Now.AddSeconds(Double.Parse(_res.expires_in));
                     return new AuthInfo { Success = true, Token = _res };
                 }
             }
@@ -59,6 +60,14 @@ namespace OAuth2Demo.Controllers
                     return new AuthInfo { Success = false, ErrorMessage = "Error while refreshing token, HTTP:" + _ex.Status + ":" + _readToEnd };
                 }
             }
+        }
+
+        public TokenInfo GetToken(TokenInfo info)
+        {
+            if (info.life_time < DateTime.Now)
+                info = RefreshToken(info.refresh_token).Token;
+            return info;
+
         }
 
         private HttpWebRequest CreateRq()
@@ -95,6 +104,7 @@ namespace OAuth2Demo.Controllers
                 {
                     var _readToEnd = _sr.ReadToEnd();
                     var _res = SimpleJson.DeserializeObject<TokenInfo>(_readToEnd);
+                    _res.life_time = DateTime.Now.AddSeconds(Double.Parse(_res.expires_in));
                     return new AuthInfo{Success = true, Token = _res};
                 }
             }
@@ -115,7 +125,7 @@ namespace OAuth2Demo.Controllers
         /// <returns></returns>
         public string GetAuthUrl()
         {
-            return oAuthUrl+ "?q=oauth2/authorize&redirect_uri="+redirectUrl+"&response_type=code&state=123&client_id="+appId+"&scope=test";
+            return oAuthUrl+ "?q=oauth2/authorize&redirect_uri="+redirectUrl+"&response_type=code&state=123&client_id="+appId+"&scope=external";
         }
     }
 }
